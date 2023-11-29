@@ -1,19 +1,20 @@
 import os
 from PIL import Image
 
-def resize_image(input_path, output_path, max_length=1080):
+def resize_image(image, max_size=1440):
+    # Calculate the scaling factor, keeping the aspect ratio
+    ratio = float(max_size) / max(image.size)
+    if ratio < 1:  # Only resize if image is larger than max size
+        new_size = tuple([int(x*ratio) for x in image.size])
+        image = image.resize(new_size, Image.Resampling.LANCZOS)  # Use LANCZOS resampling
+    return image
+
+def convert_to_webp(input_path, output_path):
     with Image.open(input_path) as img:
-        # Calculate the scaling factor
-        scale_factor = min(max_length / max(img.size), 1)
-        new_size = (int(img.size[0] * scale_factor), int(img.size[1] * scale_factor))
+        img = resize_image(img)  # Resize the image
+        img.save(output_path, 'WEBP')  # Save the resized image in WebP format
 
-        # Resize the image using the LANCZOS filter
-        resized_img = img.resize(new_size, Image.Resampling.LANCZOS)
-
-        # Save the image in WebP format
-        resized_img.save(output_path, 'WEBP')
-
-def batch_resize_images(input_dir, output_dir):
+def batch_convert_images(input_dir, output_dir):
     for root, dirs, files in os.walk(input_dir):
         for filename in files:
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -25,10 +26,10 @@ def batch_resize_images(input_dir, output_dir):
                     os.makedirs(output_subdir)
 
                 output_path = os.path.join(output_subdir, os.path.splitext(filename)[0] + '.webp')
-                resize_image(input_path, output_path)
+                convert_to_webp(input_path, output_path)
                 print(f'Processed {input_path}')
 
 # Usage
-input_directory = 'input directory path'
-output_directory = 'output directory path'
-batch_resize_images(input_directory, output_directory)
+input_directory = 'Paste File Path Here'
+output_directory = 'Paste File Path Here'
+batch_convert_images(input_directory, output_directory)
